@@ -97,6 +97,7 @@ module Ymlusgo =
         let tudalennauIProfi = ConcurrentQueue<Uri>()
         let tudalennauWediProfi = ConcurrentDictionary<Uri, CanlyniadTudalen>()
         let niferCasglwyr = 10
+        let mutable wediGorffen = false
 
         let goruchwyliwr =
             let casglwyr : Dictionary<int,Casgliwr> =
@@ -162,6 +163,10 @@ module Ymlusgo =
                             inbox.Post ChwilioAmWaith
                             return! loop state
                         | ChwilioAmWaith ->
+                            if wediGorffen then
+                                dadfygio "ChwilioAmWaith on wedi gorffen yn barod"
+                                return ()
+                                
                             // Chwilio am casgliwr gwag
                             let casglwyrRhydd = [
                                 for kv in casglwyr do
@@ -181,14 +186,15 @@ module Ymlusgo =
                                     let mbox = casglwyr.[casglwyrRhydd.Head].Mailbox
                                     mbox.Post <| Casglu(uri, inbox)
                                     casglwyr.[casglwyrRhydd.Head] <- { Mailbox = mbox ; Stad = Prysur ; Uri = Some uri } // Gosod fel dim yn barod
+                                    inbox.Post ChwilioAmWaith
                                 else
                                     dadfygio "**CIW YN WAG**"
                                     if (List.length casglwyrRhydd) = casglwyr.Count then
                                         dadfygio "***CIW YN WAG A BOB CASGLIWR YN BAROD***"
                                         inbox.Post WediGorffen
-                                        return! loop state
-                                    Thread.Sleep 100
-                            inbox.Post ChwilioAmWaith
+                                    else
+                                        Thread.Sleep 100
+                                        inbox.Post ChwilioAmWaith
                             return! loop state
                         | CasgliwrYnBarod rhifCasgliwr ->
                             let casgliwr = casglwyr.[rhifCasgliwr]
@@ -197,24 +203,18 @@ module Ymlusgo =
                             inbox.Post ChwilioAmWaith
                             return! loop state
                         | WediGorffen ->
-                            let cysylltauWediTorri =
-                                [
-                                    for kv in tudalennauWediProfi do
-                                        match kv.Value.Statws with
-                                        | None -> ()                                        
-                                        | Some statws when statws = HttpStatusCode.OK -> ()
-                                        | _ -> yield kv.Value
-                                ]
-                                |> List.map (fun t -> t.UriTudalen, t.Statws)
-                            printfn "Cysylltau wedi torri:"
-                            cysylltauWediTorri
-                            |> List.iter (fun (uri,statws) -> printfn "%A\t%A" uri statws)
-                            printfn "---"
+                            dadfygio "Gwneud WediGorffen, gyda statws wediGorffen: %b" wediGorffen
+                            wediGorffen <- true
                             (inbox :> IDisposable).Dispose()
+                            return ()
                     }
                 loop 0)
         goruchwyliwr.Post (Ciwio tudalenCychwyn)
-        [ "" ]
+        
+        while not wediGorffen do
+            Thread.Sleep 50
+        
+        tudalennauWediProfi
 
 
 open Ymlusgo
@@ -224,8 +224,29 @@ open Cofnodi
 let main argv =
     let url = "https://oriel.madarch.org"
    
-    let rhywbeth = ymlusgo url    
+    let tudalennau = ymlusgo url
+    
+    let statwsTudalennau = [ for kv in tudalennau -> kv.Value.Statws, kv.Value.UriTudalen ]
+                            |> List.sortBy (fun (statws, uri) -> statws, uri.ToString()) 
+    
+    statwsTudalennau
+    |> List.iter (fun (statws, uri) -> printfn "%A\t%A" statws uri)
+
+//    let cysylltauWediTorri =
+//        [
+//            for kv in tudalennau do
+//                match kv.Value.Statws with
+//                | None -> ()                                        
+//                | Some statws when statws = HttpStatusCode.OK -> ()
+//                | _ -> yield kv.Value
+//        ]
+//        |> List.map (fun t -> t.UriTudalen, t.Statws)
+//    printfn "Nifer tudalennau: %d" tudalennau.Count
+//    printfn "Cysylltau wedi torri:"
+//    cysylltauWediTorri
+//    |> List.iter (fun (uri,statws) -> printfn "%A\t%A" uri statws)
+//    printfn "---"    
     
     dadfygio "Wedi gorffen!"
-    Console.ReadLine() |> ignore
+    //Console.ReadLine() |> ignore
     0 // return an integer exit code
