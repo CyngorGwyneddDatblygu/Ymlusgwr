@@ -7,6 +7,8 @@ open Cofnodi
 [<EntryPoint>]
 let main argv =
     let url = "https://oriel.madarch.org"
+    
+    gosodMathauICofnodi [ Dadfygio ]
    
     let tudalennau = ymlusgo url
     
