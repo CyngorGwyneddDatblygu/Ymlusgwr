@@ -89,15 +89,14 @@ let ymlusgo url =
                 async {
                     let! msg = inbox.Receive()
                     
-//                        match msg with
-//                        | ChwilioAmWaith -> ()
-//                        | _ -> dadfygio "Wedi derbyn neges: %A" msg
+                    dadfygio "Wedi derbyn neges: %A" msg
                     
                     match msg with
                     | Ciwio uri ->                                                        
                         tudalennauIProfi.Enqueue(uri)
                         inbox.Post ChwilioAmWaith
                         return! loop state
+                        
                     | ChwilioAmWaith ->
                         if wediGorffen then
                             dadfygio "ChwilioAmWaith on wedi gorffen yn barod"
@@ -109,37 +108,35 @@ let ymlusgo url =
                                 match kv.Value.Stad with
                                 | Barod -> yield kv.Key
                                 | _ -> ()
-                                //if kv.Value.Barod then
-                                //    yield kv.Key
                         ]
-                        //printfn "CasglwyrRhydd: %A" casglwyrRhydd
                         if List.isEmpty casglwyrRhydd then
-                            //printfn "Dim gweithwyr yn rhydd"
                             Thread.Sleep 100
                         else
                             let llwyddiant, uri = tudalennauIProfi.TryDequeue()
                             if llwyddiant then
                                 let mbox = casglwyr.[casglwyrRhydd.Head].Mailbox
                                 mbox.Post <| Casglu(uri, inbox)
-                                casglwyr.[casglwyrRhydd.Head] <- { Mailbox = mbox ; Stad = Prysur ; Uri = Some uri } // Gosod fel dim yn barod
+                                casglwyr.[casglwyrRhydd.Head] <- { Mailbox = mbox ; Stad = Prysur ; Uri = Some uri } // Gosod fel prysur
                                 inbox.Post ChwilioAmWaith
                             else
-                                //dadfygio "**CIW YN WAG**"
+                                dadfygio "Ciw yw wag"
                                 if (List.length casglwyrRhydd) = casglwyr.Count then
-                                    //dadfygio "***CIW YN WAG A BOB CASGLIWR YN BAROD***"
+                                    dadfygio "***CIW YN WAG A BOB CASGLIWR YN BAROD***"
                                     inbox.Post WediGorffen
                                 else
                                     Thread.Sleep 100
                                     inbox.Post ChwilioAmWaith
                         return! loop state
+                        
                     | CasgliwrYnBarod rhifCasgliwr ->
                         let casgliwr = casglwyr.[rhifCasgliwr]
                         casglwyr.[rhifCasgliwr] <- { Mailbox = casgliwr.Mailbox ; Stad = Barod ; Uri = None }
-                        //dadfygio "Wedi gosod casgliwr %d yn barod" rhifCasgliwr
+                        dadfygio "Wedi gosod casgliwr %d yn barod" rhifCasgliwr
                         inbox.Post ChwilioAmWaith
                         return! loop state
+                        
                     | WediGorffen ->
-                        //dadfygio "Gwneud WediGorffen, gyda statws wediGorffen: %b" wediGorffen
+                        dadfygio "Gwneud WediGorffen, gyda statws wediGorffen: %b" wediGorffen
                         wediGorffen <- true
                         (inbox :> IDisposable).Dispose()
                         return ()
