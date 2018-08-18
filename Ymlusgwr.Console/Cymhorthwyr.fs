@@ -9,8 +9,11 @@ open Cofnodi
 let nôlHtml (uri  : Uri) =
     try
         dadfygio "nôlHtml i %A" uri
-        let cais = WebRequest.Create(uri)
+        let cais = WebRequest.Create(uri) :?> HttpWebRequest
         cais.Timeout <- 5000
+        cais.AllowAutoRedirect <- true
+        cais.MaximumAutomaticRedirections <- 4
+        cais.UserAgent <- "Ymlusgwr"
         use ymateb = cais.GetResponse()
         let isHtml = ymateb.ContentType.ToLower().Contains("html")
         if isHtml then
