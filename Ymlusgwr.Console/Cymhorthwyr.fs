@@ -32,7 +32,7 @@ let nôlHtml (uri  : Uri) =
         | _ -> None, None
 
 let nôlCysylltau (html : string) =
-    let patrwm = Regex(@"(href|src|rel)=""([^""]*)""")
+    let patrwm = Regex(@"(href|src)=""([^""]*)""")
     let matches = patrwm.Matches(html)
     seq { for m in matches -> m } |> Seq.map (fun m -> m.Groups.[2].Value)
 
