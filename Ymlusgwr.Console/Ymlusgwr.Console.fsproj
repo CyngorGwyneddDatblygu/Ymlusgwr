@@ -4,9 +4,13 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Cofnodi.fs" />
     <Compile Include="Cymhorthwyr.fs" />
     <Compile Include="Ymlusgo.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser.FSharp" Version="2.2.1" />
   </ItemGroup>
 </Project>
