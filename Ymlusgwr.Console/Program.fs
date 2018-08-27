@@ -1,5 +1,6 @@
 ﻿module Program
 
+open Allbynnu
 open System.Diagnostics
 open System.Net
 open CommandLine
@@ -9,6 +10,9 @@ open Cofnodi
 type Options = {
     [<Value(0, MetaName = "url", HelpText = "Y URL i ymlusgo", Required = true)>]
     Url : string
+    
+    [<Option("allbynnu-toredig-html")>]
+    AllbynnuToredigHtml : string
 }
 
 type CanlyniadRhedeg =
@@ -25,34 +29,10 @@ let rhedeg dewisiadau =
    
     let tudalennau = ymlusgo url
     
-    let cysylltauWediTorri =
-        [
-            for kv in tudalennau do
-                match kv.Value.Statws with
-                | Some statws when statws = HttpStatusCode.OK -> ()
-                | _ -> yield kv.Value.UriTudalen, kv.Value.Statws
-        ]
-        |> List.map (fun (uri, statws) ->
-                uri.ToString(),
-                (
-                    (match statws with
-                    | Some httpStatusCode -> (httpStatusCode.ToString())
-                    | _ -> ""),
-    
-                    [
-                        for kv in tudalennau do
-                            if kv.Value.Cysylltau |> List.contains uri then
-                                yield kv.Key.ToString()
-                    ]
-                )
-            )
-        |> Map.ofList
-    
-    cysylltauWediTorri
-    |> Map.iter (fun cyswlltWediTorri (statws, tudalennauGydarCyswllt) ->
-        printfn "%s\t%s" cyswlltWediTorri statws
-        tudalennauGydarCyswllt |> List.iter(fun tud -> printfn "\t%s" tud))    
-
+    if dewisiadau.AllbynnuToredigHtml <> null then
+        nôlCysylltauWediTorri tudalennau
+        |> toredigIHtml dewisiadau.AllbynnuToredigHtml url
+            
     stopwatch.Stop()
     printfn "Wedi gorffen am %s, cymerwyd %d eiliad." (System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")) (stopwatch.ElapsedMilliseconds/(int64 1000))
     CanlyniadRhedeg.Llwyddiant
@@ -65,7 +45,7 @@ let methu gwallau =
 let main argv =
     //let url = "https://oriel.madarch.org"
     
-    //gosodMathauICofnodi [ Dadfygio ]
+    gosodMathauICofnodi [ Dadfygio ]
     
     let result = CommandLine.Parser.Default.ParseArguments<Options>(argv)
     let canlyniadRheged =

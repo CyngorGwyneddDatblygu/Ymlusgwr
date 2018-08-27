@@ -8,6 +8,7 @@
     <Compile Include="Cofnodi.fs" />
     <Compile Include="Cymhorthwyr.fs" />
     <Compile Include="Ymlusgo.fs" />
+    <Compile Include="Allbynnu.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
